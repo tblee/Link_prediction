@@ -6,7 +6,7 @@ Created on Sun Nov 15 16:51:54 2015
 """
 from matplotlib import pyplot as plt
 
-fp = open('repos/1000_repos/snapshot-1231.txt', 'r')
+fp = open('repos/1000_repos/snapshot-0630.txt', 'r')
 
 nnodes = 1000
 edges = []
