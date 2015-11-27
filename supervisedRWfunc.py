@@ -313,15 +313,19 @@ def minObj(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     # transform input features into matrix form
     features_m = genFeatures(nnodes, g, features)
     
-    trans = genTrans(nnodes, g, features_m, source, alpha, beta)
-    pp = np.repeat(1.0/nnodes, nnodes)
-    pgrank = iterPageRank(pp, trans)
-    
-    # compute cost from the generated PageRank value
+    # cost value    
     cost = 0
-    for d in Dset:
-        for l in Lset:
-            cost += costFunc(pgrank[l], pgrank[d], offset)
+    # calculate cost function for every selected sources nodes
+    for i in range(len(source)):
+        trans = genTrans(nnodes, g, features_m, source[i], alpha, beta)
+        pp = np.repeat(1.0/nnodes, nnodes)
+        pgrank = iterPageRank(pp, trans)
+        
+        # compute cost from the generated PageRank value    
+        for d in Dset[i]:
+            for l in Lset[i]:
+                cost += costFunc(pgrank[l], pgrank[d], offset)
+    
     penalty = lam * np.dot(beta, beta)
     
     return (cost + penalty)
@@ -337,34 +341,49 @@ def minObj(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
 # power-iteration-like method.
 # (return value is a vector with the dimension of parameter beta)
 def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
-    diffVec = []
+    diffVec = [0] * len(beta)
     # calculate PageRank according to features and beta values
     
     # transform input features into matrix form
     features_m = genFeatures(nnodes, g, features)        
     
-    trans = genTrans(nnodes, g, features_m, source, alpha, beta)
-    pp = np.repeat(1.0/nnodes, nnodes)
-    pgrank = iterPageRank(pp, trans)
-    
+    ###########################################################
+    ### trans_p and transDiff are independent of source node ##
+    ###########################################################
     # trans_p is the original transition matrix 
     # (without teleportation and varying strength)
     # this is used to calculate gradient of transition matrix
-    trans_p = genTrans_plain(nnodes, g, source, 0)
-    
+    trans_p = genTrans_plain(nnodes, g, 0, 0)
+        
     # a list of matrices is returned by diffQ function
     transDiff = diffQ(features_m, beta, trans_p, alpha)
-    for k in range(len(beta)):
-        tempObjDiff = 0
-        pDiff = np.zeros((1, nnodes))
-        pDiff = iterPageDiff(pDiff, pgrank, trans, transDiff[k])
-        for d in Dset:
-            for l in Lset:
-                tempObjDiff += costDiff(pgrank[l], pgrank[d], offset)*(pDiff[l] - pDiff[d])
-        # penalty term
-        tempObjDiff += 2.0 * lam * beta[k]
+    ###########################################################
+    ###########################################################
+    
+    # calculate gradient for every selected sources nodes
+    for i in range(len(source)):
+    
+        trans = genTrans(nnodes, g, features_m, source[i], alpha, beta)
+        pp = np.repeat(1.0/nnodes, nnodes)
+        pgrank = iterPageRank(pp, trans)
         
-        diffVec.append(tempObjDiff)
+        for k in range(len(beta)):
+            tempObjDiff = 0
+            pDiff = np.zeros((1, nnodes))
+            pDiff = iterPageDiff(pDiff, pgrank, trans, transDiff[k])
+            for d in Dset[i]:
+                for l in Lset[i]:
+                    tempObjDiff += costDiff(pgrank[l], pgrank[d], offset)*(pDiff[l] - pDiff[d])
+            # penalty term
+            #tempObjDiff += 2.0 * lam * beta[k]
+            
+            #diffVec.append(tempObjDiff)
+            diffVec[k] += tempObjDiff
+    
+    # penalty term
+    for k in range(len(beta)):
+        diffVec[k] += 2.0 * lam * beta[k]
+    
     return np.asarray(diffVec)
 
         

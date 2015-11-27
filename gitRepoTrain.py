@@ -48,24 +48,29 @@ for i in range(len(edges)):
 
 
 
-# assume source node 0, compute the candidate set for future links
-source = 4
-sNeighbor = []
-for e in edges:
-    if e[0] == source:
-        sNeighbor.append(e[1])
-    elif e[1] == source:
-        sNeighbor.append(e[0])
-candidates = list(set(list(range(nnodes))) - set([source]) - set(sNeighbor))
-
-sNeighbor_end = []
-for e in edges_end:
-    if e[0] == source:
-        sNeighbor_end.append(e[1])
-    elif e[1] == source:
-        sNeighbor_end.append(e[0])
-Dset = list(set(sNeighbor_end) - set(sNeighbor))
-Lset = list(set(candidates) - set(Dset))
+# compute the candidate set for future links according to source node
+source = [0, 1, 2, 3, 5, 6, 7, 8]
+Dset = []
+Lset = []
+for i in range(len(source)):
+    sNeighbor = []
+    for e in edges:
+        if e[0] == source[i]:
+            sNeighbor.append(e[1])
+        elif e[1] == source[i]:
+            sNeighbor.append(e[0])
+    candidates = list(set(list(range(nnodes))) - set([source[i]]) - set(sNeighbor))
+    
+    sNeighbor_end = []
+    for e in edges_end:
+        if e[0] == source[i]:
+            sNeighbor_end.append(e[1])
+        elif e[1] == source[i]:
+            sNeighbor_end.append(e[0])
+    tempDset = list(set(sNeighbor_end) - set(sNeighbor))
+    tempLset = list(set(candidates) - set(tempDset))
+    Dset.append(tempDset)
+    Lset.append(tempLset)
 
 
 #######################################
