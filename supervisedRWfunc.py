@@ -149,8 +149,12 @@ def genTrans_plain(nnodes, g, s, alpha):
     return trans
 
 
+# ***function: genFeatures
+# input features are in edge list form, this function transfer the features into
+# matrix-style, with each element in the matrix a the feature vecotr of 
+# corresponding edge, the element is [] if the particular edge does not exist
 def genFeatures(nnodes, g, features):
-    #fea = np.zeros((nnodes, nnodes))
+    # very elemnt in the array is a list
     fea = [[ [] for x in range(nnodes) ] for x in range(nnodes) ]
     # create a feature matrix
     for i in range(len(g)):
@@ -175,6 +179,9 @@ def iterPageDiff(pdiff, p, trans, transdiff):
     return pdiffnew[0]
 
 
+#########################################
+### this function is not used anymore ###
+#########################################
 # ***function: diffQelem
 # this function is called by diffQ, return the (i, j)-th element of the 
 # derivative of transition matrix with respect to k-th element of beta
@@ -350,7 +357,6 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     for k in range(len(beta)):
         tempObjDiff = 0
         pDiff = np.zeros((1, nnodes))
-        #transDiff = diffQ(features_m, beta, trans_p, alpha)
         pDiff = iterPageDiff(pDiff, pgrank, trans, transDiff[k])
         for d in Dset:
             for l in Lset:
@@ -366,7 +372,7 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
 # users call this function to train beta parameter of Supervised Random Walk algorithm
 # a training set and training graph must be specified as well as the parameters for the 
 # learning process. Also, initial guess of beta parameter shall be given
-# scipy's BFGS optimizer is called to iteratively optimize the object function,
+# scipy's L-BFGS-B optimizer is called to iteratively optimize the object function,
 # object function and the gradient of cost function is the main input to BFGS
 # optimizer
 def trainModel(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta_init):
