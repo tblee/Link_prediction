@@ -42,8 +42,46 @@ features[0] = map(lambda x: (x-u0)/s0, features[0])
 features[1] = map(lambda x: (x-u1)/s1, features[1])
 
 edge_feature = []
+# features are formed with intercept term
 for i in range(len(edges)):
-    edge_feature.append([features[0][i], features[1][i]])
+    edge_feature.append([1, features[0][i], features[1][i]])
+
+
+
+# assume source node 0, compute the candidate set for future links
+source = 0
+sNeighbor = []
+for e in edges:
+    if e[0] == source:
+        sNeighbor.append(e[1])
+candidates = list(set(list(range(nnodes))) - set([source]) - set(sNeighbor))
+
+sNeighbor_end = []
+for e in edges_end:
+    if e[0] == source:
+        sNeighbor_end.append(e[1])
+Dset = list(set(sNeighbor_end) - set(sNeighbor))
+Lset = list(set(candidates) - set(Dset))
+
+
+#######################################
+#### Model training phase #############
+#######################################
+
+print "Training model..."
+
+# set up parameters
+lam = 0
+offset = 0
+alpha = 0.2
+beta_init = [0, 0, 0]
+beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
+                      source, alpha, beta_init)
+
+print beta_Opt
+
+
+
 
 
 

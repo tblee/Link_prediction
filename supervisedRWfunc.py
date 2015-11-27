@@ -6,7 +6,7 @@ Created on Thu Nov 12 20:41:54 2015
 """
 import functools
 import numpy as np
-from scipy.optimize import fmin_bfgs
+from scipy.optimize import fmin_bfgs, fmin_l_bfgs_b
 
 # ***function: iterPageRank
 # this function takes initial node probabilities and a 
@@ -296,9 +296,14 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
 # object function and the gradient of cost function is the main input to BFGS
 # optimizer
 def trainModel(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta_init):
-    beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+    #beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+    #                        source, alpha), beta_init, fprime = functools.partial(objDiff, 
+    #                        Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
+    
+    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
                             source, alpha), beta_init, fprime = functools.partial(objDiff, 
                             Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
+    
     return beta_Opt
 
 
