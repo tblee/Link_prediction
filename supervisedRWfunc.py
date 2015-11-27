@@ -67,10 +67,26 @@ def genCopyGraph(nnodes, alpha):
 
 
 # ***function: calStrength
-# return edge strength calculated by exponential function
+# return edge strength calculated by logistic function
 # the inputs are two vectors, features and the parameters
 def calStrength(features, beta):
-    return np.exp(np.dot(features, beta))
+    #return np.exp(np.dot(features, beta))
+	# use logistic strength function to prevent potential overflow or under flow
+	# of floating point numbers
+	return  1.0 / (1+ np.exp(-1 * np.dot(features, beta) ))
+
+
+# ***function: strengthDiff
+# calculate an returns the gradient of strength functioin with 
+# respect to beta, the returned value is a vector
+def strengthDiff(features, beta):
+	# return a vector of gradient of strength
+	diff = []
+	denom = calStrength(features, beta) ** 2
+	numer_exp = np.exp(-1 * np.dot(features, beta))
+	for k in range(len(beta)):
+		diff.append(-1 * features[k] * numer_exp * denom)
+	return diff
 
 
 # ***function: genTrans
@@ -189,14 +205,75 @@ def diffQelem(features, beta, trans_p, alpha, row, col, k):
 # ***function: diffQ
 # given a Supervised Random Walk transition matrix, return the derivative of 
 # transition matrix with respect to the k-th element in parameter beta
-def diffQ(features, beta, trans_p, alpha, k):    
-    qp = np.zeros(np.shape(trans_p))
+def diffQ(features, beta, trans_p, alpha):
+    
+    nnodes = int(np.shape(trans_p)[0])
+	
+    # first compute the (unnormalized) edge strength matrix and the gradient matrix
+    sMat = np.zeros((nnodes, nnodes))
     for i in range(int(np.shape(trans_p)[0])):
+        for j in range(i, int(np.shape(trans_p)[1])):
+            if trans_p[i, j] > 0:
+                strength = calStrength(features[i][j], beta)
+                sMat[i, j] = strength
+                sMat[j, i] = strength
+    
+    gradS = []
+    for i in range(len(beta)):
+        gradS.append(np.zeros((nnodes, nnodes)))    
+    
+    
+	# gradQ is the gradient of strength matrix
+	# for a matrix of gradient of strength, each element in the matrix is a vecotr
+	#gradS = [[ [] for x in range(nnodes) ] for x in range(nnodes) ]
+    for i in range(int(np.shape(trans_p)[0])):
+        for j in range(int(np.shape(trans_p)[1])):
+            if trans_p[i, j] > 0:
+                gradTemp = strengthDiff(features[i][j], beta)
+                #gradS[i][j] = strengthDiff(features[i][j], beta)
+                for k in range(len(beta)):
+                    gradS[k][i, j] = gradTemp[k]
+    
+    
+    # compute the gradient of transition matrix
+    # a list of matrices is computed, with k-th element in the list be 
+    # the derivative of transition matrix with respect to the k-th 
+    # element in parameter vecotor beta
+        
+    qp = []
+    for i in range(len(beta)):
+        qp.append(np.zeros((nnodes, nnodes)))
+    
+    for i in range(int(np.shape(trans_p)[0])):
+        # for each row in the gradient matrix, some common factors can be 
+        # computed first
+        sumStrength = 0
+        sumDiff = [0] * len(beta)
+        for j in range(int(np.shape(trans_p)[1])):
+            if trans_p[i, j] > 0:
+                sumStrength += sMat[i, j]
+                for k in range(len(beta)):
+                    sumDiff[k] += gradS[k][i, j]
+        # individual entries can then be computed
+        
+        for j in range(int(np.shape(trans_p)[1])):
+            if trans_p[i, j] > 0:
+                for k in range(len(beta)):
+                    qp[k][i, j] = (sumStrength ** -2)*( gradS[k][i, j]*sumStrength -
+                    sMat[i, j]*sumDiff[k])*(1 - alpha)
+        
+    """
+    #qp = np.zeros(np.shape(trans_p))
+    #for i in range(int(np.shape(trans_p)[0])):
+		# many factors in diffQ is identical for the same row, compute the common items first
+		
+		
         for j in range(int(np.shape(trans_p)[1])):
             # should check on the original version of transition matrix, 
             # because teleportation does not contribute to gradient
             if trans_p[i, j] > 0:
                 qp[i, j] = diffQelem(features, beta, trans_p, alpha, i, j, k)
+		"""
     
     return qp
 
@@ -296,13 +373,13 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
 # object function and the gradient of cost function is the main input to BFGS
 # optimizer
 def trainModel(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta_init):
-    #beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
-    #                        source, alpha), beta_init, fprime = functools.partial(objDiff, 
-    #                        Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
-    
-    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+    beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
                             source, alpha), beta_init, fprime = functools.partial(objDiff, 
                             Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
+    
+    #beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+    #                        source, alpha), beta_init, fprime = functools.partial(objDiff, 
+    #                        Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
     
     return beta_Opt
 
