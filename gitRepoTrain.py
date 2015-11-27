@@ -42,14 +42,14 @@ features[0] = map(lambda x: (x-u0)/s0, features[0])
 features[1] = map(lambda x: (x-u1)/s1, features[1])
 
 edge_feature = []
-# features are formed with intercept term
+# features are formed without intercept term
 for i in range(len(edges)):
-    edge_feature.append([1, features[0][i], features[1][i]])
+    edge_feature.append([features[0][i], features[1][i]])
 
 
 
 # assume source node 0, compute the candidate set for future links
-source = 2
+source = 5
 sNeighbor = []
 for e in edges:
     if e[0] == source:
@@ -81,19 +81,19 @@ print "Training model..."
 lam = 0
 offset = 0
 alpha = 0.2
-beta_init = [0, 0, 0]
+beta_init = [0, 0]
 
-ff = genFeatures(nnodes, edges, edge_feature)
-trans_p = genTrans_plain(nnodes, edges, 0, 0)
-qqp = diffQ(ff, [0, 0.5, 0.5], trans_p, alpha)
-print qqp
+#ff = genFeatures(nnodes, edges, edge_feature)
+#trans_p = genTrans_plain(nnodes, edges, 0, 0)
+#qqp = diffQ(ff, [0, 0.5, 0.5], trans_p, alpha)
+#print qqp
 
 
 
-#beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
-#                      source, alpha, beta_init)
+beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
+                      source, alpha, beta_init)
 
-#print beta_Opt
+print beta_Opt
 
 """
 # first compute the (unnormalized) edge strength matrix and the gradient matrix

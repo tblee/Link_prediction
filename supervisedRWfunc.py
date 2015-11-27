@@ -80,13 +80,13 @@ def calStrength(features, beta):
 # calculate an returns the gradient of strength functioin with 
 # respect to beta, the returned value is a vector
 def strengthDiff(features, beta):
-	# return a vector of gradient of strength
-	diff = []
-	denom = calStrength(features, beta) ** 2
-	numer_exp = np.exp(-1 * np.dot(features, beta))
-	for k in range(len(beta)):
-		diff.append(-1 * features[k] * numer_exp * denom)
-	return diff
+    # return a vector of gradient of strength
+    diff = []
+    denom = calStrength(features, beta) ** 2
+    numer_exp = np.exp(-1 * np.dot(features, beta))
+    for k in range(len(beta)):
+        diff.append(features[k] * numer_exp * denom)
+    return diff
 
 
 # ***function: genTrans
@@ -218,19 +218,17 @@ def diffQ(features, beta, trans_p, alpha):
                 sMat[i, j] = strength
                 sMat[j, i] = strength
     
+    # gradQ is the gradient of strength matrix
+    # a list of matrices is computed, with the k-th item in the list be the 
+    # derivative of strength matrix with respect to the k-th element in beta
+    # vecotr
     gradS = []
     for i in range(len(beta)):
         gradS.append(np.zeros((nnodes, nnodes)))    
-    
-    
-	# gradQ is the gradient of strength matrix
-	# for a matrix of gradient of strength, each element in the matrix is a vecotr
-	#gradS = [[ [] for x in range(nnodes) ] for x in range(nnodes) ]
     for i in range(int(np.shape(trans_p)[0])):
         for j in range(int(np.shape(trans_p)[1])):
             if trans_p[i, j] > 0:
                 gradTemp = strengthDiff(features[i][j], beta)
-                #gradS[i][j] = strengthDiff(features[i][j], beta)
                 for k in range(len(beta)):
                     gradS[k][i, j] = gradTemp[k]
     
@@ -239,7 +237,6 @@ def diffQ(features, beta, trans_p, alpha):
     # a list of matrices is computed, with k-th element in the list be 
     # the derivative of transition matrix with respect to the k-th 
     # element in parameter vecotor beta
-        
     qp = []
     for i in range(len(beta)):
         qp.append(np.zeros((nnodes, nnodes)))
@@ -255,7 +252,6 @@ def diffQ(features, beta, trans_p, alpha):
                 for k in range(len(beta)):
                     sumDiff[k] += gradS[k][i, j]
         # individual entries can then be computed
-        
         for j in range(int(np.shape(trans_p)[1])):
             if trans_p[i, j] > 0:
                 for k in range(len(beta)):
@@ -274,7 +270,6 @@ def diffQ(features, beta, trans_p, alpha):
             if trans_p[i, j] > 0:
                 qp[i, j] = diffQelem(features, beta, trans_p, alpha, i, j, k)
 		"""
-    
     return qp
 
 
@@ -350,11 +345,13 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     # this is used to calculate gradient of transition matrix
     trans_p = genTrans_plain(nnodes, g, source, 0)
     
+    # a list of matrices is returned by diffQ function
+    transDiff = diffQ(features_m, beta, trans_p, alpha)
     for k in range(len(beta)):
         tempObjDiff = 0
         pDiff = np.zeros((1, nnodes))
-        transDiff = diffQ(features_m, beta, trans_p, alpha, k)
-        pDiff = iterPageDiff(pDiff, pgrank, trans, transDiff)
+        #transDiff = diffQ(features_m, beta, trans_p, alpha)
+        pDiff = iterPageDiff(pDiff, pgrank, trans, transDiff[k])
         for d in Dset:
             for l in Lset:
                 tempObjDiff += costDiff(pgrank[l], pgrank[d], offset)*(pDiff[l] - pDiff[d])
@@ -373,13 +370,13 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
 # object function and the gradient of cost function is the main input to BFGS
 # optimizer
 def trainModel(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta_init):
-    beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
-                            source, alpha), beta_init, fprime = functools.partial(objDiff, 
-                            Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
-    
-    #beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+    #beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
     #                        source, alpha), beta_init, fprime = functools.partial(objDiff, 
     #                        Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
+    
+    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+                            source, alpha), beta_init, fprime = functools.partial(objDiff, 
+                            Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
     
     return beta_Opt
 
