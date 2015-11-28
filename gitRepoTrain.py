@@ -96,7 +96,7 @@ for i in range(len(elig_source)):
 
 # randomly pick nodes with current degree > 0 and number of future 
 # links >= Dsize_cut as the training set
-trainSize = 10
+trainSize = 20
 testSize = 100
 # this index is the index of source nodes in D_source list
 source_index = np.random.choice(list(range(len(D_source))), 
@@ -111,16 +111,36 @@ for i in source_index:
 
 # randomly pick nodes with current degree > 0, number of future links 
 # >= Dsize_cut and haven't been picked as training nodes to be test nodes
-test_index = np.random.choice(list(set(list(range(len(D_source)))) - 
-set(source_index)), size=testSize, replace=False)
+#test_index = np.random.choice(list(set(list(range(len(D_source)))) - 
+#set(source_index)), size=testSize, replace=False)
+test_candidate = list(set(list(range(len(D_source)))) - set(source_index))
+
+
 
 testSet = []
 Dset_test = []
+Lset_test = []
 candidates_test = []
+
+
+## temp test code
+for i in test_candidate:
+    if len(Dset_all[i]) >= 20 and len(Dset_all[i]) <= 30:
+        testSet.append(D_source[i])
+        Dset_test.append(Dset_all[i])
+        Lset_test.append(Lset_all[i])
+        candidates_test.append(Dset_all[i] + Lset_all[i])
+
+
+# original code
+"""
 for i in test_index:
     testSet.append(D_source[i])
     Dset_test.append(Dset_all[i])
     candidates_test.append(Dset_all[i] + Lset_all[i])
+"""
+
+
 
 """
 Dset = []
@@ -155,15 +175,19 @@ print "Training model..."
 # set up parameters
 lam = 0
 offset = 0
-alpha = 0.1
-beta_init = [0, 0]
+alpha = 0.3
+beta_init = [2, 2]
 
 #ff = genFeatures(nnodes, edges, edge_feature)
 #trans_p = genTrans_plain(nnodes, edges, 0, 0)
 #qqp = diffQ(ff, [0, 0.5, 0.5], trans_p, alpha)
 #print qqp
-beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
-                      source, alpha, beta_init)
+#beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
+#                      source, alpha, beta_init)
+
+# train model direclty wtth test set, compare performance with UWRW
+beta_Opt = trainModel(Dset_test, Lset_test, offset, lam, nnodes, edges, edge_feature, 
+                      testSet, alpha, beta_init)
 
 print "Training source set:\n", source
 print "\nTrained model parameters:\n", beta_Opt
@@ -172,36 +196,13 @@ print "\nTrained model parameters:\n", beta_Opt
 #######################################
 #### Test model performance ###########
 #######################################
-"""
-# randomly pick test nodes with degree > 0 and haven't been chosen
-# as training nodes
-testSize = 100
-testSet = np.random.choice(list(set(elig_source) - set(source)), 
-                           size=testSize, replace=False)
 
-Dset_test = []
-for i in range(len(testSet)):
-    sNeighbor = []
-    for e in edges:
-        if e[0] == testSet[i]:
-            sNeighbor.append(e[1])
-        elif e[1] == testSet[i]:
-            sNeighbor.append(e[0])
-    candidates = list(set(list(range(nnodes))) - set([testSet[i]]) - set(sNeighbor))
-    
-    sNeighbor_end = []
-    for e in edges_end:
-        if e[0] == testSet[i]:
-            sNeighbor_end.append(e[1])
-        elif e[1] == testSet[i]:
-            sNeighbor_end.append(e[0])
-    tempDset = list(set(sNeighbor_end) - set(sNeighbor))
-    Dset_test.append(tempDset)
-"""
+print "Evaluating model performance..."
 
 # link prediction with transition matrices computed with trained parameters
 ff = genFeatures(nnodes, edges, edge_feature)
 trans_srw = genTrans(nnodes, edges, ff, testSet, alpha, beta_Opt[0])
+#trans_srw = genTrans(nnodes, edges, ff, testSet, alpha, [10, 10])
 
 # compute personalized PageRank for test nodes to recommend links
 pgrank_srw = []
@@ -227,8 +228,41 @@ for i in range(len(testSet)):
         if cand_pairs[j][0] in Dset_test[i]:
             link_hits += 1
     link_hits_srw.append(link_hits)
-    
 
+print "\nSRW performance: ", np.mean(link_hits_srw)
+
+# evaluate and compared the performance of unweighted random walk
+print "Evaluating alternative models..."   
+
+# generate unweighted transition matrices for testSet nodes
+trans_uw = genTrans_plain(nnodes, edges, testSet, alpha)
+
+# compute personalized PageRank for test nodes to recommend links
+pgrank_uw = []
+cand_pairs_uw = []
+link_hits_uw = []
+for i in range(len(testSet)):
+    pp = np.repeat(1.0/nnodes, nnodes)
+    curpgrank = iterPageRank(pp, trans_uw[i])
+    # record the pgrank score
+    pgrank_uw.append(curpgrank)
+    
+    # find the top ranking nodes in candidates set
+    cand_pairs = []
+    for j in candidates_test[i]:
+        cand_pairs.append((j, curpgrank[j]))
+    cand_pairs = sorted(cand_pairs, key = lambda x: x[1], reverse=True)
+    # record candidate-pagerank pairs
+    cand_pairs_uw.append(cand_pairs)
+    
+    # calculate precision of the top-Dsize_cut predicted links
+    link_hits = 0    
+    for j in range(Dsize_cut):
+        if cand_pairs[j][0] in Dset_test[i]:
+            link_hits += 1
+    link_hits_uw.append(link_hits)
+
+print "\nUW performance: ", np.mean(link_hits_uw)
 
 
 

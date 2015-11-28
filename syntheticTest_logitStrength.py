@@ -185,7 +185,7 @@ for noise in [1]:
         ############################################
         # link prediction with unweighted PageRank
         # generate transition matrix
-        trans = genTrans_plain(nnodes, g[0], source, alpha)
+        trans = genTrans_plain(nnodes, g[0], [source], alpha)[0]
         # calculate pageRank
         pp = np.repeat(1.0/nnodes, nnodes)
         pgrank_uw = iterPageRank(pp, trans)

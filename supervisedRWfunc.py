@@ -142,15 +142,19 @@ def genTrans_plain(nnodes, g, s, alpha):
         if tempSum > 0:
             trans[i,] = map(lambda x: x/tempSum, trans[i, ])
     
-    # create the one matrix
-    one = np.zeros((nnodes, nnodes))
-    for i in range(nnodes):
-        one[i, s] = 1
-        
-    # combine the regular transition matrix and the one matrix
-    trans = (1-alpha)*trans + alpha*one
+    # create a list of transition matrices for a set of sources
+    trans_multi = []    
     
-    return trans
+    for si in range(len(s)):
+        # create the one matrix
+        one = np.zeros((nnodes, nnodes))
+        for i in range(nnodes):
+            one[i, s[si]] = 1
+            
+        # combine the regular transition matrix and the one matrix
+        trans_multi.append((1-alpha)*trans + alpha*one)
+    
+    return trans_multi
 
 
 # ***function: genFeatures
@@ -347,7 +351,7 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     # trans_p is the original transition matrix 
     # (without teleportation and varying strength)
     # this is used to calculate gradient of transition matrix
-    trans_p = genTrans_plain(nnodes, g, 0, 0)
+    trans_p = genTrans_plain(nnodes, g, [0], 0)[0]
         
     # a list of matrices is returned by diffQ function
     transDiff = diffQ(features_m, beta, trans_p, alpha)
