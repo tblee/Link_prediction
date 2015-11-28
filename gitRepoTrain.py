@@ -6,6 +6,8 @@ Created on Wed Nov 25 20:56:00 2015
 """
 from supervisedRWfunc import *
 
+print "Reading data..."
+
 # load the sanpshots of 6-30 and 12-31,
 # 6-30 is a graph used as a basis of the learning process
 # 12-31 provides both training data and test data
@@ -13,6 +15,7 @@ fp = open('repos/1000_repos/snapshot-0630.txt', 'r')
 fp_end = open('repos/1000_repos/snapshot-1231.txt', 'r')
 
 nnodes = 1000
+degrees = [0] * nnodes
 edges = []
 edges_end = []
 features = [[], []]
@@ -22,6 +25,8 @@ for line in fp:
     edges.append((int(temp[0]), int(temp[1])))
     features[0].append(float(temp[2]))
     features[1].append(float(temp[3]))
+    degrees[int(temp[0])] += 1
+    degrees[int(temp[1])] += 1
 
 for line in fp_end:
     temp = line.strip().split(',')
@@ -47,9 +52,20 @@ for i in range(len(edges)):
     edge_feature.append([features[0][i], features[1][i]])
 
 
+#######################################
+#### Training set formation ###########
+#######################################
+
+print "Forming training set..."
 
 # compute the candidate set for future links according to source node
-source = [0, 1, 2, 3, 5, 6, 7, 8]
+# train model with a set of source nodes
+elig_source = []
+for i in range(len(degrees)):
+    if degrees[i] > 0:
+        elig_source.append(i)
+# randomly pick 100 nodes with degree > 0 as the training set
+source = np.random.choice(elig_source, size=10, replace=False)
 Dset = []
 Lset = []
 for i in range(len(source)):
@@ -92,49 +108,6 @@ beta_init = [0, 0]
 beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
                       source, alpha, beta_init)
 
-print beta_Opt
-
-"""
-# first compute the (unnormalized) edge strength matrix and the gradient matrix
-sMat = np.zeros((nnodes, nnodes))
-for i in range(int(np.shape(trans_p)[0])):
-    for j in range(i, int(np.shape(trans_p)[1])):
-        if trans_p[i, j] > 0:
-            strength = calStrength(ff[i][j], beta)
-            sMat[i, j] = strength
-            sMat[j, i] = strength
-
-
-beta = [0, 0.5, 0.5]
-gradS = [[ [] for x in range(nnodes) ] for x in range(nnodes) ]
-for i in range(int(np.shape(trans_p)[0])):
-	for j in range(int(np.shape(trans_p)[1])):
-		if trans_p[i, j] > 0:
-			gradS[i][j] = strengthDiff(ff[i][j], beta)
-
-qp = []
-for i in range(len(beta)):
-    qp.append(np.zeros((nnodes, nnodes)))
-
-for i in range(int(np.shape(trans_p)[0])):
-    # for each row in the gradient matrix, some common factors can be 
-    # computed first
-    sumStrength = 0
-    sumDiff = [0] * len(beta)
-    for j in range(int(np.shape(trans_p)[1])):
-        if trans_p[i, j] > 0:
-            sumStrength += sMat[i, j]
-            for k in range(len(beta)):
-                sumDiff[k] += gradS[i][j][k]
-    print "in row", i, sumStrength, sumDiff
-    
-    # individual entries can then be computed
-    for j in range(int(np.shape(trans_p)[1])):
-        if trans_p[i, j] > 0:
-            for k in range(len(beta)):
-                qp[k][i, j] = (sumStrength ** -2)*( gradS[i][j][k]*sumStrength -
-                sMat[i, j]*sumDiff[k])*(1 - alpha)
-
-"""
-
+print "Training source set:\n", source
+print "\nTrained model parameters:\n", beta_Opt
 

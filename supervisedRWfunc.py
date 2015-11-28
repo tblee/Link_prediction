@@ -113,15 +113,19 @@ def genTrans(nnodes, g, features, s, alpha, beta):
         if tempSum > 0:
             trans[i,] = map(lambda x: x/tempSum, trans[i, ])
     
-    # create the one matrix
-    one = np.zeros((nnodes, nnodes))
-    for i in range(nnodes):
-        one[i, s] = 1
-        
-    # combine the regular transition matrix and the one matrix
-    trans = (1-alpha)*trans + alpha*one
+    # create a list of transition matrices for a set of sources
+    trans_multi = []    
     
-    return trans
+    for si in range(len(s)):
+    # create the one matrix
+        one = np.zeros((nnodes, nnodes))
+        for i in range(nnodes):
+            one[i, s[si]] = 1
+            
+        # combine the regular transition matrix and the one matrix
+        trans_multi.append((1-alpha)*trans + alpha*one) 
+    
+    return trans_multi
 
 # ***function: genTrans_plain
 # this function construct transition matrix for random walk
@@ -265,18 +269,6 @@ def diffQ(features, beta, trans_p, alpha):
                     qp[k][i, j] = (sumStrength ** -2)*( gradS[k][i, j]*sumStrength -
                     sMat[i, j]*sumDiff[k])*(1 - alpha)
         
-    """
-    #qp = np.zeros(np.shape(trans_p))
-    #for i in range(int(np.shape(trans_p)[0])):
-		# many factors in diffQ is identical for the same row, compute the common items first
-		
-		
-        for j in range(int(np.shape(trans_p)[1])):
-            # should check on the original version of transition matrix, 
-            # because teleportation does not contribute to gradient
-            if trans_p[i, j] > 0:
-                qp[i, j] = diffQelem(features, beta, trans_p, alpha, i, j, k)
-		"""
     return qp
 
 
@@ -313,13 +305,15 @@ def minObj(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     # transform input features into matrix form
     features_m = genFeatures(nnodes, g, features)
     
+    # compute transition matrices for sources
+    trans = genTrans(nnodes, g, features_m, source, alpha, beta)
+    
     # cost value    
     cost = 0
     # calculate cost function for every selected sources nodes
     for i in range(len(source)):
-        trans = genTrans(nnodes, g, features_m, source[i], alpha, beta)
         pp = np.repeat(1.0/nnodes, nnodes)
-        pgrank = iterPageRank(pp, trans)
+        pgrank = iterPageRank(pp, trans[i])
         
         # compute cost from the generated PageRank value    
         for d in Dset[i]:
@@ -360,17 +354,19 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     ###########################################################
     ###########################################################
     
+    # compute transition matrices for sources
+    trans = genTrans(nnodes, g, features_m, source, alpha, beta)
+    
     # calculate gradient for every selected sources nodes
     for i in range(len(source)):
     
-        trans = genTrans(nnodes, g, features_m, source[i], alpha, beta)
         pp = np.repeat(1.0/nnodes, nnodes)
-        pgrank = iterPageRank(pp, trans)
+        pgrank = iterPageRank(pp, trans[i])
         
         for k in range(len(beta)):
             tempObjDiff = 0
             pDiff = np.zeros((1, nnodes))
-            pDiff = iterPageDiff(pDiff, pgrank, trans, transDiff[k])
+            pDiff = iterPageDiff(pDiff, pgrank, trans[i], transDiff[k])
             for d in Dset[i]:
                 for l in Lset[i]:
                     tempObjDiff += costDiff(pgrank[l], pgrank[d], offset)*(pDiff[l] - pDiff[d])

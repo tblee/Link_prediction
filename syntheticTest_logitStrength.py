@@ -60,7 +60,7 @@ for noise in [1]:
         beta = [1, -1] 
         
         # generate transition matrix
-        trans = genTrans(nnodes, g[0], ff, source, alpha, beta)
+        trans = genTrans(nnodes, g[0], ff, [source], alpha, beta)[0]
         # calculate pageRank
         pp = np.repeat(1.0/nnodes, nnodes)
         pgrank = iterPageRank(pp, trans)
@@ -120,7 +120,7 @@ for noise in [1]:
         print "Computing error rate..."
         
         # generate transition matrix
-        trans = genTrans(nnodes, g[0], ff, source, alpha, beta_Opt[0])
+        trans = genTrans(nnodes, g[0], ff, [source], alpha, beta_Opt[0])[0]
         # calculate pageRank
         pp = np.repeat(1.0/nnodes, nnodes)
         pgrank_learn = iterPageRank(pp, trans)
@@ -156,7 +156,7 @@ for noise in [1]:
         
         # link prediction with the exact parameters
         # generate transition matrix
-        trans = genTrans(nnodes, g[0], ff, source, alpha, beta)
+        trans = genTrans(nnodes, g[0], ff, [source], alpha, beta)[0]
         # calculate pageRank
         pp = np.repeat(1.0/nnodes, nnodes)
         pgrank_exact = iterPageRank(pp, trans)
