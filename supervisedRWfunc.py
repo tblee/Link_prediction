@@ -282,7 +282,8 @@ def diffQ(features, beta, trans_p, alpha):
 # one in no-link set, and an offset parameter, the cost function value is 
 # returned. (return value is a scalar)
 def costFunc(pl, pd, offset):
-    return (max(0, pl - pd + offset))**2
+    #return (max(0, pl - pd + offset))**2
+    return 1.0 / (1 + np.exp(-1.0 * (pl - pd)/offset))
 
 
 # ***function: costDiff
@@ -291,7 +292,8 @@ def costFunc(pl, pd, offset):
 # one in no-link set, and an offset parameter, the gradient of cost function 
 # is returned. (return value is a scalar)
 def costDiff(pl, pd, offset):
-    return 2.0*(max(0, pl - pd + offset))
+    #return 2.0*(max(0, pl - pd + offset))
+    return (1.0 / offset) * np.exp(-1.0 * (pl - pd)/offset) * (costFunc(pl, pd, offset) ** 2)
 
 
 # ***function: minObj
@@ -399,9 +401,9 @@ def trainModel(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta
     #                        source, alpha), beta_init, fprime = functools.partial(objDiff, 
     #                        Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
     
-    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
+    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, offset, lam, nnodes, g, features, 
                             source, alpha), beta_init, fprime = functools.partial(objDiff, 
-                            Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
+                            Dset, Lset, offset, lam, nnodes, g, features, source, alpha))
     
     return beta_Opt
 

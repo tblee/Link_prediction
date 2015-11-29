@@ -18,7 +18,7 @@ ex_error = []
 uw_error = []
 #for noise in [0, 0.05, 0.1, 0.15, 0.2, 0.25]:
 #for noise in [0.5, 0.75, 1.25]:
-for noise in [1]:
+for noise in [0.1]:
     l_error_temp = []
     ex_error_temp = []
     uw_error_temp = []
@@ -109,7 +109,7 @@ for noise in [1]:
         beta_init = [0, 0]
         #beta_Opt = trainModel(Dset, Lset, 0, 0, nnodes, g[0], features, source, alpha,
         #                      beta_init)
-        beta_Opt = trainModel([Dset], [Lset], 0, 0, nnodes, g[0], edge_feature, 
+        beta_Opt = trainModel([Dset], [Lset], 1, 0, nnodes, g[0], edge_feature, 
                               [source], alpha, beta_init)
         
         

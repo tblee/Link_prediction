@@ -4,6 +4,7 @@ Created on Wed Nov 25 20:56:00 2015
 
 @author: Timber
 """
+import json
 from supervisedRWfunc import *
 
 print "Reading data..."
@@ -96,7 +97,7 @@ for i in range(len(elig_source)):
 
 # randomly pick nodes with current degree > 0 and number of future 
 # links >= Dsize_cut as the training set
-trainSize = 20
+trainSize = 200
 testSize = 100
 # this index is the index of source nodes in D_source list
 source_index = np.random.choice(list(range(len(D_source))), 
@@ -111,9 +112,9 @@ for i in source_index:
 
 # randomly pick nodes with current degree > 0, number of future links 
 # >= Dsize_cut and haven't been picked as training nodes to be test nodes
-#test_index = np.random.choice(list(set(list(range(len(D_source)))) - 
-#set(source_index)), size=testSize, replace=False)
-test_candidate = list(set(list(range(len(D_source)))) - set(source_index))
+test_index = np.random.choice(list(set(list(range(len(D_source)))) - 
+set(source_index)), size=testSize, replace=False)
+#test_candidate = list(set(list(range(len(D_source)))) - set(source_index))
 
 
 
@@ -122,7 +123,7 @@ Dset_test = []
 Lset_test = []
 candidates_test = []
 
-
+"""
 ## temp test code
 for i in test_candidate:
     if len(Dset_all[i]) >= 20 and len(Dset_all[i]) <= 30:
@@ -130,15 +131,16 @@ for i in test_candidate:
         Dset_test.append(Dset_all[i])
         Lset_test.append(Lset_all[i])
         candidates_test.append(Dset_all[i] + Lset_all[i])
-
+"""
 
 # original code
-"""
+
 for i in test_index:
     testSet.append(D_source[i])
     Dset_test.append(Dset_all[i])
+    Lset_test.append(Lset_all[i])
     candidates_test.append(Dset_all[i] + Lset_all[i])
-"""
+
 
 
 
@@ -173,8 +175,8 @@ for i in range(len(source)):
 print "Training model..."
 
 # set up parameters
-lam = 0
-offset = 0
+lam = 50
+offset = 0.01
 alpha = 0.3
 beta_init = [2, 2]
 
@@ -182,12 +184,12 @@ beta_init = [2, 2]
 #trans_p = genTrans_plain(nnodes, edges, 0, 0)
 #qqp = diffQ(ff, [0, 0.5, 0.5], trans_p, alpha)
 #print qqp
-#beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
-#                      source, alpha, beta_init)
+beta_Opt = trainModel(Dset, Lset, offset, lam, nnodes, edges, edge_feature, 
+                      source, alpha, beta_init)
 
 # train model direclty wtth test set, compare performance with UWRW
-beta_Opt = trainModel(Dset_test, Lset_test, offset, lam, nnodes, edges, edge_feature, 
-                      testSet, alpha, beta_init)
+#beta_Opt = trainModel(Dset_test, Lset_test, offset, lam, nnodes, edges, edge_feature, 
+#                      testSet, alpha, beta_init)
 
 print "Training source set:\n", source
 print "\nTrained model parameters:\n", beta_Opt
@@ -264,6 +266,21 @@ for i in range(len(testSet)):
 
 print "\nUW performance: ", np.mean(link_hits_uw)
 
+
+fjson = open('git_repo_100test_9.json', 'w')
+
+beta_json = []
+beta_json.append([beta_Opt[0][0], beta_Opt[0][1]])
+beta_json.append(beta_Opt[1])
+tempHT = beta_Opt[2]
+tempHT['grad'] = [tempHT['grad'][0], tempHT['grad'][1]]
+beta_json.append(tempHT)
+
+test_log = json.dumps({'train set': source, 'test set': testSet, 
+'beta': beta_json, 'SRW error': np.mean(link_hits_srw), 'UW error': np.mean(link_hits_uw)})
+fjson.write(test_log + '\n')
+
+fjson.close()
 
 
 
