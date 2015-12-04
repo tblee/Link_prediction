@@ -157,6 +157,44 @@ def genTrans_plain(nnodes, g, s, alpha):
     return trans_multi
 
 
+# ***function: genTrans_tele
+
+def genTrans_tele(nnodes, g, features, tele, alpha, beta):
+    # feature is supplied in per-edge manner
+    # the transition matrix is created with teleportation
+    trans = np.zeros((nnodes, nnodes))
+    for i in range(len(g)):
+        #strength = calStrength(np.asarray(features[g[i][0],])*np.asarray(features[g[i][1],])
+        #, beta)
+        strength = calStrength(features[g[i][0]][g[i][1]], beta)
+        trans[g[i][0], g[i][1]] = strength
+        trans[g[i][1], g[i][0]] = strength
+    
+    # normalize the transition matrix
+    for i in range(nnodes):
+        tempSum = sum(trans[i,])
+        if tempSum > 0:
+            trans[i,] = map(lambda x: x/tempSum, trans[i, ])
+    
+    # create a list of transition matrices for a set of teleport sets
+    trans_multi = []
+    
+    for t in range(len(tele)):
+        teleSize = len(tele[t])
+        one = np.zeros((nnodes, nnodes))
+        if teleSize > 0:
+            for i in range(nnodes):
+                for j in range(teleSize):
+                    one[i, tele[t][j]] = 1.0/teleSize
+            # the calculated transition matrix with teleportation
+            trans_multi.append((1-alpha)*trans + alpha*one)
+        else:
+            # transition matrix without transporation since the 
+            # input teleport set is empty
+            trans_multi.append(trans)
+    
+    return trans_multi
+
 # ***function: genFeatures
 # input features are in edge list form, this function transfer the features into
 # matrix-style, with each element in the matrix a the feature vecotr of 
