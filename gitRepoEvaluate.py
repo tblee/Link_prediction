@@ -147,8 +147,9 @@ for i in range(1, len(link_hits_srw)):
     link_hits_srw[i] += link_hits_srw[i-1]
 
 link_hits_srw = map(lambda x: float(x)/len(testSet), link_hits_srw)
-for i in range(len(link_hits_srw)):
-    link_hits_srw[i] = link_hits_srw[i]/(i+1)
+link_hit_rate_srw = link_hits_srw[:]
+for i in range(len(link_hit_rate_srw)):
+    link_hit_rate_srw[i] = link_hit_rate_srw[i]/(i+1)
 
 print "\nSRW performance: ", link_hits_srw
 
@@ -187,8 +188,9 @@ for i in range(1, len(link_hits_uw)):
     link_hits_uw[i] += link_hits_uw[i-1]
 
 link_hits_uw = map(lambda x: float(x)/len(testSet), link_hits_uw)
-for i in range(len(link_hits_uw)):
-    link_hits_uw[i] = link_hits_uw[i]/(i+1)
+link_hit_rate_uw = link_hits_uw[:]
+for i in range(len(link_hit_rate_uw)):
+    link_hit_rate_uw[i] = link_hit_rate_uw[i]/(i+1)
 
 print "\nUW performance: ", link_hits_uw
 
@@ -196,10 +198,19 @@ print "\nUW performance: ", link_hits_uw
 # plot the model performance
 plt.plot(range(1, 21), link_hits_srw, '-o', c='blue', label = 'Supervised Random Walk')
 plt.plot(range(1, 21), link_hits_uw, '-x', c='red', label = 'Unweighted Random Walk')
+plt.legend(loc = 4)
+plt.xlabel("Number of predicted links")
+plt.ylabel("Average number of hits")
+plt.figure(figsize = (400, 200))
+plt.show()
+
+# plot the model performance
+plt.plot(range(1, 21), link_hit_rate_srw, '-o', c='blue', label = 'Supervised Random Walk')
+plt.plot(range(1, 21), link_hit_rate_uw, '-x', c='red', label = 'Unweighted Random Walk')
 plt.legend(loc = 1)
 plt.xlabel("Number of predicted links")
 plt.ylabel("Hit Rate")
 plt.figure(figsize = (400, 200))
-
+plt.show()
 
 
