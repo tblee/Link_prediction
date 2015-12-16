@@ -114,7 +114,6 @@ for i in source_index:
 # >= Dsize_cut and haven't been picked as training nodes to be test nodes
 test_index = np.random.choice(list(set(list(range(len(D_source)))) - 
 set(source_index)), size=testSize, replace=False)
-#test_candidate = list(set(list(range(len(D_source)))) - set(source_index))
 
 
 
@@ -123,15 +122,6 @@ Dset_test = []
 Lset_test = []
 candidates_test = []
 
-"""
-## temp test code
-for i in test_candidate:
-    if len(Dset_all[i]) >= 20 and len(Dset_all[i]) <= 30:
-        testSet.append(D_source[i])
-        Dset_test.append(Dset_all[i])
-        Lset_test.append(Lset_all[i])
-        candidates_test.append(Dset_all[i] + Lset_all[i])
-"""
 
 # original code
 
