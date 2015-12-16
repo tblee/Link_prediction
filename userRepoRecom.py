@@ -183,7 +183,7 @@ plt.plot(range(1, numRecom+1), repo_hits_uw, '-x', c='red', label = 'Unweighted 
 plt.legend(loc = 4)
 plt.xlabel("Number of recommended repos")
 plt.ylabel("Average number of hits")
-plt.figure(figsize = (400, 200))
+plt.figure(figsize = (800, 600))
 
 
 

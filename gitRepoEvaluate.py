@@ -62,7 +62,7 @@ for i in range(len(edges)):
 print "Reading trained data..."
 
 # read-in trained json file
-fjson = open('git_repo_100test_7.json', 'r')
+fjson = open('repo_test_logs/git_repo_1000test.json', 'r')
 for line in fjson:
     trained_item = json.loads(line)
 fjson.close()

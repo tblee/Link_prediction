@@ -8,17 +8,15 @@ from supervisedRWfunc import *
 import json
 
 # write simulated raw data to json format
-fjson = open('synthetic_log-4.json', 'w')
+fjson = open('Synthesized logs/synthetic_log.json', 'w')
 # write error rate to another file
-ferror = open('synthetic_error_rate-4.json', 'w')
+ferror = open('Synthesized logs/synthetic_error_rate.json', 'w')
 
 
 l_error = []
 ex_error = []
 uw_error = []
-#for noise in [0, 0.05, 0.1, 0.15, 0.2, 0.25]:
-#for noise in [0.5, 0.75, 1.25]:
-for noise in [0.1]:
+for noise in [0, 0.05, 0.1, 0.15, 0.2, 0.25]:
     l_error_temp = []
     ex_error_temp = []
     uw_error_temp = []

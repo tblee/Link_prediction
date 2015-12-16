@@ -143,31 +143,6 @@ for i in test_index:
 
 
 
-
-"""
-Dset = []
-Lset = []
-for i in range(len(source)):
-    sNeighbor = []
-    for e in edges:
-        if e[0] == source[i]:
-            sNeighbor.append(e[1])
-        elif e[1] == source[i]:
-            sNeighbor.append(e[0])
-    candidates = list(set(list(range(nnodes))) - set([source[i]]) - set(sNeighbor))
-    
-    sNeighbor_end = []
-    for e in edges_end:
-        if e[0] == source[i]:
-            sNeighbor_end.append(e[1])
-        elif e[1] == source[i]:
-            sNeighbor_end.append(e[0])
-    tempDset = list(set(sNeighbor_end) - set(sNeighbor))
-    tempLset = list(set(candidates) - set(tempDset))
-    Dset.append(tempDset)
-    Lset.append(tempLset)
-"""
-
 #######################################
 #### Model training phase #############
 #######################################
@@ -267,7 +242,7 @@ for i in range(len(testSet)):
 print "\nUW performance: ", np.mean(link_hits_uw)
 
 
-fjson = open('git_repo_100test_9.json', 'w')
+fjson = open('repo_test_logs/git_repo_1000test.json', 'w')
 
 beta_json = []
 beta_json.append([beta_Opt[0][0], beta_Opt[0][1]])
@@ -277,7 +252,7 @@ tempHT['grad'] = [tempHT['grad'][0], tempHT['grad'][1]]
 beta_json.append(tempHT)
 
 test_log = json.dumps({'train set': source, 'test set': testSet, 
-'beta': beta_json, 'SRW error': np.mean(link_hits_srw), 'UW error': np.mean(link_hits_uw)})
+'beta': beta_json, 'SRW hit': np.mean(link_hits_srw), 'UW hit': np.mean(link_hits_uw)})
 fjson.write(test_log + '\n')
 
 fjson.close()
