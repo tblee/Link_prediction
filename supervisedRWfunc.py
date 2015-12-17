@@ -158,14 +158,16 @@ def genTrans_plain(nnodes, g, s, alpha):
 
 
 # ***function: genTrans_tele
-
+# this function takes in a set of teleport nodes and compute the 
+# transition matrix accordingly. the difference between genTrans function
+# is that genTrans produces transition matrices for single source nodes,
+# while genTrans_tele produces transition matrices for a set of teleport
+# nodes.
 def genTrans_tele(nnodes, g, features, tele, alpha, beta):
     # feature is supplied in per-edge manner
     # the transition matrix is created with teleportation
     trans = np.zeros((nnodes, nnodes))
     for i in range(len(g)):
-        #strength = calStrength(np.asarray(features[g[i][0],])*np.asarray(features[g[i][1],])
-        #, beta)
         strength = calStrength(features[g[i][0]][g[i][1]], beta)
         trans[g[i][0], g[i][1]] = strength
         trans[g[i][1], g[i][0]] = strength
